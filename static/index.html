@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="="width=device-width, initial-scale=1.0">
+        <title>Gestor de Tares</title>
+        <style>
+            * {box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            body {background-color: #1e1e2e; color: #cdd6f4; display: flex; justify-content: center; padding: 40px 20px; margin:0; }
+            .container {width: 100%; max-width: 500px; background: #181825; padding: 25px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);}
+            h1 { text-align: center; color: #89b4fa; margin-bottom: 20px; font-size: 1.8rem; }
+            .form-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+            input[type="text"] { padding: 12px; border-radius: 6px; border: 1px solid #45475a; background: #313244; color: #cdd6f4; font-size: 1rem; outline: none; }
+            input[type="text"]:focus { border-color: #89b4fa; }
+            button.btn-add { padding: 12px; border: none; border-radius: 6px; background: #a6e3a1; color: #11111b; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+            button.btn-add:hover { background: #94e2d5; }
+            .task-list { list-style: none; padding: 0; margin: 0; }
+            .task-item { display: flex; justify-content: space-between; align-items: center; background: #313244; padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; }
+            .task-info h3 { margin: 0 0 5px 0; font-size: 1.05rem; color: #f5e0dc; }
+            .task-info p { margin: 0; font-size: 0.85rem; color: #bac2de; }
+            .btn-delete { background: #f38ba8; color: #11111b; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+            .btn-delete:hover { background: #eba0ac; }
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <h1>📌 Gestor de Tareas</h1>
+        <div class="form-group">
+            <input type="text" id="titulo" placeholder="Título de la tarea..." required>
+            <input type="text" id="descripcion" placeholder="Descripción breve...">
+            <button class="btn-add" onclick="agregarTarea()">+ Agregar Tarea</button>
+    </div>
+
+    <ul id="lista-tareas" class="task-list"></ul>
+</div>
+
+<script>
+    const API_URL = "/tareas";
+    async function cargarTareas() {
+        const res = await fetch(API_URL);
+        const tareas = await res.json();
+        const lista = document.getElementById("lista-tareas");
+        lista.innerHTML = "";
+
+        tareas.forEach(tarea => {
+            const li = document.createElement("li");
+            li.className = "task-item";
+            li.innerHTML = `
+                <div class="task-info">
+                    <h3>${tarea.titulo}</h3>
+                    <p>${tarea.descripcion}</p>
+                </div>
+                <button class="btn-delete" onclick="eliminarTarea(${tarea.id})">Eliminar</button>
+            `;
+            lista.appendChild(li);
+        });
+    }
+
+    async function agregarTarea() {
+        const titulo = document.getElementById("titulo").value;
+        const descripcion = document.getElementById("descripcion").value;
+
+        if (!titulo) return alert("Por favor ingresa un título");
+
+        await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ titulo, descripcion, completada: false })
+        });
+
+        document.getElementById("titulo").value = "";
+        document.getElementById("descripcion").value = "";
+        cargarTareas();
+    }
+
+    async function eliminarTarea(id) {
+        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        cargarTareas();
+    }
+
+    cargarTareas();
+</script>
